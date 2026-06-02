@@ -93,12 +93,12 @@ kubectl create namespace "$APP_NS"
 kubectl -n "$APP_NS" create deployment demo --image=mcr.microsoft.com/azuredocs/aks-helloworld:v1
 kubectl -n "$APP_NS" expose deployment demo --port 80 --target-port 80
 
-cat <<'YAML' | kubectl apply -f -
+cat <<YAML | kubectl apply -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: demo-ingress
-  namespace: ${APP_NS}
+  namespace: $APP_NS
 spec:
   ingressClassName: nginx
   rules:
@@ -165,19 +165,21 @@ kubectl get ingress -A -o yaml | Out-File -Encoding utf8 ingress-export.yaml
 ```
 
 ### 3.3 Run migration utility (example)
-> Replace with the exact migration utility binary/container command used by your environment.
+> Install and follow the official AGC migration utility instructions for your environment. Use the generated Gateway manifest output path in the next step.
 
 ```bash
-# Example placeholder command
+# Example command pattern
 # agc-migrate ingress --input ingress-export.yaml --output gateway-output.yaml
 ```
 
 ```powershell
-# Example placeholder command
+# Example command pattern
 # agc-migrate ingress --input ingress-export.yaml --output gateway-output.yaml
 ```
 
 ### 3.4 Review generated Gateway API resources
+> If your migration tool uses a different output file name/path, replace `gateway-output.yaml` below.
+
 ```bash
 cat gateway-output.yaml
 ```
@@ -204,7 +206,7 @@ az provider register --namespace Microsoft.Network
 ```
 
 ### 4.2 Enable AGC/ALB-related AKS features (example)
-> Feature names can vary by region and release stage. Confirm latest Azure documentation.
+> These AKS feature flags are typically required for managed ALB/AGC setup. Feature names can vary by region and release stage. Confirm latest Azure documentation before running: https://learn.microsoft.com/azure/application-gateway/for-containers/
 
 ```bash
 # Example commands (verify before use)
@@ -218,12 +220,14 @@ az provider register --namespace Microsoft.Network
 
 ### 4.3 Install/enable managed ALB Controller (example)
 ```bash
-# Example placeholder: follow official AGC + ALB Controller installation guide
+# Follow official AGC + ALB Controller installation guide:
+# https://learn.microsoft.com/azure/application-gateway/for-containers/
 # kubectl get pods -n azure-alb-system
 ```
 
 ```powershell
-# Example placeholder: follow official AGC + ALB Controller installation guide
+# Follow official AGC + ALB Controller installation guide:
+# https://learn.microsoft.com/azure/application-gateway/for-containers/
 # kubectl get pods -n azure-alb-system
 ```
 
@@ -290,7 +294,8 @@ $WAF_POLICY_ID = az network application-gateway waf-policy show `
 
 ### 5.3 Associate WAF policy to AGC listener/routing configuration
 ```bash
-# Replace ALB_NAME with your AGC ALB resource name
+# Replace ALB_NAME with the value in the "Name" column from this output
+az network alb list --resource-group "$RG_NAME" -o table
 export ALB_NAME="<your-alb-name>"
 az network alb waf update \
   --resource-group "$RG_NAME" \
@@ -299,7 +304,8 @@ az network alb waf update \
 ```
 
 ```powershell
-# Replace ALB_NAME with your AGC ALB resource name
+# Replace ALB_NAME with the value in the "Name" column from this output
+az network alb list --resource-group $RG_NAME -o table
 $ALB_NAME = "<your-alb-name>"
 az network alb waf update `
   --resource-group $RG_NAME `

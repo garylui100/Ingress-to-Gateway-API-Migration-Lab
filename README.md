@@ -98,7 +98,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: demo-ingress
-  namespace: lab-app
+  namespace: ${APP_NS}
 spec:
   ingressClassName: nginx
   rules:
@@ -125,7 +125,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: demo-ingress
-  namespace: lab-app
+  namespace: $APP_NS
 spec:
   ingressClassName: nginx
   rules:
@@ -242,8 +242,10 @@ kubectl get gateway,httproute -A
 
 ## Section 5 - Apply Web Application Firewall to the AGC
 
-### 5.1 Create or identify WAF policy
+### 5.1 Install AGC CLI extension and create or identify WAF policy
 ```bash
+az extension add --name application-gateway-container
+
 export WAF_POLICY_NAME="waf-agc-lab-policy"
 az network application-gateway waf-policy create \
   --resource-group "$RG_NAME" \
@@ -252,6 +254,8 @@ az network application-gateway waf-policy create \
 ```
 
 ```powershell
+az extension add --name application-gateway-container
+
 $WAF_POLICY_NAME = "waf-agc-lab-policy"
 az network application-gateway waf-policy create `
   --resource-group $RG_NAME `
@@ -259,12 +263,17 @@ az network application-gateway waf-policy create `
   --location $LOCATION
 ```
 
-### 5.2 Enable prevention mode
+### 5.2 Enable prevention mode and capture WAF policy ID
 ```bash
 az network application-gateway waf-policy policy-setting update \
   --resource-group "$RG_NAME" \
   --policy-name "$WAF_POLICY_NAME" \
   --mode Prevention
+
+WAF_POLICY_ID=$(az network application-gateway waf-policy show \
+  --resource-group "$RG_NAME" \
+  --name "$WAF_POLICY_NAME" \
+  --query id -o tsv)
 ```
 
 ```powershell
@@ -272,10 +281,31 @@ az network application-gateway waf-policy policy-setting update `
   --resource-group $RG_NAME `
   --policy-name $WAF_POLICY_NAME `
   --mode Prevention
+
+$WAF_POLICY_ID = az network application-gateway waf-policy show `
+  --resource-group $RG_NAME `
+  --name $WAF_POLICY_NAME `
+  --query id -o tsv
 ```
 
 ### 5.3 Associate WAF policy to AGC listener/routing configuration
-> Association command depends on your AGC deployment model and resource topology. Use the matching Azure command/API for your created AGC resources.
+```bash
+# Replace ALB_NAME with your AGC ALB resource name
+export ALB_NAME="<your-alb-name>"
+az network alb waf update \
+  --resource-group "$RG_NAME" \
+  --name "$ALB_NAME" \
+  --waf-policy "$WAF_POLICY_ID"
+```
+
+```powershell
+# Replace ALB_NAME with your AGC ALB resource name
+$ALB_NAME = "<your-alb-name>"
+az network alb waf update `
+  --resource-group $RG_NAME `
+  --name $ALB_NAME `
+  --waf-policy $WAF_POLICY_ID
+```
 
 ---
 

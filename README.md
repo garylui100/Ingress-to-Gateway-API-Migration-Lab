@@ -190,7 +190,7 @@ Get-Content .\gateway-output.yaml
 
 ---
 
-## Section 4 - Application Gateway for Container (with managed ALB Controller) Setup
+## Section 4 - Application Gateway for Containers (with managed ALB Controller) Setup
 
 ### 4.1 Register required Azure providers
 ```bash
@@ -296,6 +296,8 @@ $WAF_POLICY_ID = az network application-gateway waf-policy show `
 ```bash
 # Replace ALB_NAME with the value in the "Name" column from this output
 az network alb list --resource-group "$RG_NAME" -o table
+# Optional: if only one ALB exists in the resource group, auto-select it
+# export ALB_NAME=$(az network alb list --resource-group "$RG_NAME" --query "[0].name" -o tsv)
 export ALB_NAME="<your-alb-name>"
 az network alb waf update \
   --resource-group "$RG_NAME" \
@@ -306,6 +308,8 @@ az network alb waf update \
 ```powershell
 # Replace ALB_NAME with the value in the "Name" column from this output
 az network alb list --resource-group $RG_NAME -o table
+# Optional: if only one ALB exists in the resource group, auto-select it
+# $ALB_NAME = az network alb list --resource-group $RG_NAME --query "[0].name" -o tsv
 $ALB_NAME = "<your-alb-name>"
 az network alb waf update `
   --resource-group $RG_NAME `
